@@ -1,39 +1,48 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-
-// Leaflet のデフォルトアイコンが出ない問題対策
-import iconUrl from "leaflet/dist/images/marker-icon.png";
-import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
-import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 L.Icon.Default.mergeOptions({
-  iconUrl,
-  iconRetinaUrl,
-  shadowUrl,
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
-const center = [35.681236, 139.767125]; // 東京駅あたり
-
 function App() {
+  const [spots, setSpots] = useState([]);
+
+  // markers.json を読み込む
+  useEffect(() => {
+    fetch("/markers.json")
+      .then((response) => response.json())
+      .then((data) => setSpots(data))
+      .catch((err) => console.error("JSON load error:", err));
+  }, []);
+
   return (
-    <div className="App">
-      <h1 style={{ textAlign: "center" }}>共有マップ（試作）</h1>
-      <MapContainer
-        center={center}
-        zoom={13}
-        style={{ height: "80vh", width: "100%" }}
-      >
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker position={center}>
-          <Popup>ここが中心（東京駅）です。</Popup>
+    <MapContainer
+      center={[35.681236, 139.767125]}
+      zoom={14}
+      style={{ height: "100vh", width: "100%" }}
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {spots.map((spot, index) => (
+        <Marker key={index} position={[spot.lat, spot.lng]}>
+          <Popup>
+            <strong>{spot.name}</strong>
+            <br />
+            カテゴリ: {spot.category}
+          </Popup>
         </Marker>
-      </MapContainer>
-    </div>
+      ))}
+    </MapContainer>
   );
 }
 
