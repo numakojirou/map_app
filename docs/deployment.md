@@ -20,7 +20,16 @@
 - `firebase login` 済み
 - 対象 Firebase プロジェクトに対する権限あり
 
-> 実際の Firebase プロジェクト ID／プロジェクト名はこのリポジトリ内には保存されていない（`.firebaserc` が無い）。初回は `firebase use --add` で紐付ける必要があるはず。
+### デプロイ先プロジェクト
+
+`.firebaserc` で固定済み：
+
+```json
+{ "projects": { "default": "shared-map-app2" } }
+```
+
+- 公開 URL: https://shared-map-app2.web.app/
+- 別プロジェクト（例: `numako-site`）でも同じ端末を使う場合があるが、`.firebaserc` を置いているので `firebase deploy` は必ず `shared-map-app2` に飛ぶ
 
 ## デプロイ手順
 

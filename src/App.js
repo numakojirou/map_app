@@ -12,33 +12,46 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+// ISO 文字列を「YYYY/MM/DD HH:mm」形式に整形
+const formatUpdatedAt = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(
+    d.getDate()
+  )} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 function App() {
-  const [spots, setSpots] = useState([]);
+  const [members, setMembers] = useState([]);
 
   // markers.json を読み込む
   useEffect(() => {
     fetch("/markers.json")
       .then((response) => response.json())
-      .then((data) => setSpots(data))
+      .then((data) => setMembers(data))
       .catch((err) => console.error("JSON load error:", err));
   }, []);
 
   return (
     <MapContainer
       center={[35.681236, 139.767125]}
-      zoom={14}
+      zoom={10}
       style={{ height: "100vh", width: "100%" }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {spots.map((spot, index) => (
-        <Marker key={index} position={[spot.lat, spot.lng]}>
+      {members.map((member) => (
+        <Marker key={member.id} position={[member.lat, member.lng]}>
           <Popup>
-            <strong>{spot.name}</strong>
+            <strong>{member.name}</strong>
             <br />
-            カテゴリ: {spot.category}
+            現場: {member.site}
+            <br />
+            最終更新: {formatUpdatedAt(member.updatedAt)}
           </Popup>
         </Marker>
       ))}
@@ -47,4 +60,3 @@ function App() {
 }
 
 export default App;
-
