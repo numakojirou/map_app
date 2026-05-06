@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+import Header from "./Header";
+import Legend from "./Legend";
+import { createMarkerIcon } from "./markerIcon";
+import "./App.css";
 
 // ISO 文字列を「YYYY/MM/DD HH:mm」形式に整形
 const formatUpdatedAt = (iso) => {
@@ -35,27 +29,40 @@ function App() {
   }, []);
 
   return (
-    <MapContainer
-      center={[35.681236, 139.767125]}
-      zoom={10}
-      style={{ height: "100vh", width: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <div className="app">
+      <Header memberCount={members.length} />
+      <main className="app__map">
+        <MapContainer
+          center={[35.681236, 139.767125]}
+          zoom={10}
+          scrollWheelZoom
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
-      {members.map((member) => (
-        <Marker key={member.id} position={[member.lat, member.lng]}>
-          <Popup>
-            <strong>{member.name}</strong>
-            <br />
-            現場: {member.site}
-            <br />
-            最終更新: {formatUpdatedAt(member.updatedAt)}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+          {members.map((member) => (
+            <Marker
+              key={member.id}
+              position={[member.lat, member.lng]}
+              icon={createMarkerIcon(member.category)}
+            >
+              <Popup>
+                <div className="popup-card">
+                  <h3 className="popup-card__name">{member.name}</h3>
+                  <p className="popup-card__site">{member.site}</p>
+                  <p className="popup-card__updated">
+                    最終更新: {formatUpdatedAt(member.updatedAt)}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+        <Legend />
+      </main>
+    </div>
   );
 }
 

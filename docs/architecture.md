@@ -17,18 +17,22 @@
 map-app/
 ├── public/
 │   ├── index.html, favicon.ico, manifest.json, robots.txt
-│   └── markers.json          ← マーカー（地点）データ。アプリ起動時に fetch される
+│   └── markers.json          ← メンバー配置データ。アプリ起動時に fetch される
 ├── src/
 │   ├── index.js              ← エントリ。React ルート + Leaflet CSS 読み込み
-│   ├── index.css             ← グローバル CSS
-│   ├── App.js                ← 地図コンポーネント本体
-│   ├── App.css               ← (未使用 / CRA テンプレ残置)
-│   ├── App.test.js           ← (現状落ちる / CRA テンプレ残置)
-│   ├── logo.svg              ← (未使用 / CRA テンプレ残置)
+│   ├── index.css             ← グローバル CSS（CSS 変数・フォント・基本スタイル）
+│   ├── App.js                ← レイアウト本体（Header + Map + Legend）
+│   ├── App.css               ← アプリレイアウト・マーカーピン・ポップアップカード
+│   ├── Header.jsx            ← トップヘッダー（タイトル + メンバー数）
+│   ├── Header.css            ← ヘッダー専用スタイル
+│   ├── Legend.jsx            ← 地図右上の凡例（カテゴリ別色）
+│   ├── Legend.css            ← 凡例専用スタイル
+│   ├── markerIcon.js         ← カテゴリ別 L.divIcon 生成
 │   ├── reportWebVitals.js, setupTests.js
 ├── build/                    ← `npm run build` 出力（gitignore）
-├── .firebase/                ← Firebase デプロイキャッシュ
+├── .firebase/                ← Firebase デプロイキャッシュ（gitignore）
 ├── firebase.json             ← Hosting 設定
+├── .firebaserc               ← デプロイ先プロジェクト固定
 ├── package.json
 └── docs/                     ← 本ドキュメント群
 ```
