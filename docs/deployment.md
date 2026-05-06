@@ -25,11 +25,14 @@
 `.firebaserc` で固定済み：
 
 ```json
-{ "projects": { "default": "shared-map-app2" } }
+{ "projects": { "default": "shared-map-app-21793" } }
 ```
 
-- 公開 URL: https://shared-map-app2.web.app/
-- 別プロジェクト（例: `numako-site`）でも同じ端末を使う場合があるが、`.firebaserc` を置いているので `firebase deploy` は必ず `shared-map-app2` に飛ぶ
+- Project ID: `shared-map-app-21793`（Firebase Console での Display Name は `shared-map-app`）
+- 公開 URL: https://shared-map-app-21793.web.app/
+- 別プロジェクト（例: `numako-site`）でも同じ端末を使う場合があるが、`.firebaserc` を置いているので `firebase deploy` は必ず `shared-map-app-21793` に飛ぶ
+
+> 過去の経緯：以前は `shared-map-app2` という別プロジェクト（URL: `shared-map-app2.web.app`）に古い build が残っていたが、現在の正は `shared-map-app-21793` 側。`shared-map-app2` プロジェクトは未使用なので Firebase Console で削除してよい。
 
 ## デプロイ手順
 
