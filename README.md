@@ -1,70 +1,66 @@
-# Getting Started with Create React App
+# map-app
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+社内メンバーの現場配置を地図で共有する内部向け Web アプリ。
+「誰が、今、どの現場にいるか」を地図上のマーカーで可視化する。
 
-## Available Scripts
+公開 URL: https://shared-map-app-21793.web.app/
 
-In the project directory, you can run:
+## 何ができるか（現状）
 
-### `npm start`
+- 関東一円を中心に地図を表示（OpenStreetMap タイル）
+- メンバー単位のマーカーを描画
+- マーカーをクリックすると **メンバー名 / 現場名 / 最終更新時刻** をポップアップ表示
+- 配置の更新は `public/markers.json` を直接編集 → 再デプロイで反映（日次運用ではなく、現場移動契機で更新する想定）
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 技術スタック
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- React 19 (Create React App 5.0.1)
+- react-leaflet 5 + Leaflet 1.9（地図）
+- Firebase Hosting（配信）
 
-### `npm test`
+詳細は `docs/architecture.md` を参照。
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## ディレクトリ構成（要点）
 
-### `npm run build`
+```
+map-app/
+├── public/markers.json   ← メンバー配置データ（編集対象）
+├── src/
+│   ├── index.js          ← React エントリ
+│   └── App.js            ← 地図コンポーネント
+├── firebase.json         ← Firebase Hosting 設定
+├── .firebaserc           ← デプロイ先プロジェクト固定（shared-map-app-21793）
+└── docs/                 ← 仕様・設計ドキュメント
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## ドキュメント
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- [docs/overview.md](docs/overview.md) — 用途・想定ユーザー・ユースケース
+- [docs/architecture.md](docs/architecture.md) — 技術構成とデータフロー
+- [docs/data-model.md](docs/data-model.md) — `markers.json` のスキーマ
+- [docs/deployment.md](docs/deployment.md) — Firebase Hosting デプロイ手順
+- [docs/roadmap.md](docs/roadmap.md) — 現状制約と今後の拡張計画
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 開発
 
-### `npm run eject`
+```bash
+# 依存インストール（初回のみ）
+npm install
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# 開発サーバ
+npm start
+# → http://localhost:3000
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## デプロイ
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+npm run build
+firebase deploy --only hosting
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+詳細・注意点は [docs/deployment.md](docs/deployment.md) を参照。
 
-## Learn More
+## ライセンス
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+社内利用想定の private プロジェクト。
