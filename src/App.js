@@ -194,7 +194,18 @@ function MapView() {
               icon={createMarkerIcon(member.category)}
               draggable
               eventHandlers={{
-                dragend: (e) => handleDragEnd(member, e.target.getLatLng()),
+                dragend: (e) => {
+                  const newPos = e.target.getLatLng();
+                  const ok = window.confirm(
+                    `${member.name} の位置を本当に移動しますか？`
+                  );
+                  if (!ok) {
+                    // 取り消し: Leaflet 側のマーカー位置を元に戻す
+                    e.target.setLatLng([member.lat, member.lng]);
+                    return;
+                  }
+                  handleDragEnd(member, newPos);
+                },
               }}
             >
               <Popup>
