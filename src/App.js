@@ -8,14 +8,25 @@ import { isAllowedUser } from "./auth/accessControl";
 import LoginPage from "./auth/LoginPage";
 import AccessDenied from "./auth/AccessDenied";
 import AuthLoading from "./auth/AuthLoading";
+import SeedPanel from "./data/SeedPanel";
+import { subscribeMembers } from "./data/membersRepo";
 import { createMarkerIcon } from "./markerIcon";
 import "./App.css";
 
-// ISO 文字列を「YYYY/MM/DD HH:mm」形式に整形
-const formatUpdatedAt = (iso) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
+// 表示用：ISO 文字列 / Firestore Timestamp / Date を「YYYY/MM/DD HH:mm」に整形
+const formatUpdatedAt = (value) => {
+  if (!value) return "";
+  let d;
+  if (typeof value === "string") {
+    d = new Date(value);
+  } else if (typeof value?.toDate === "function") {
+    d = value.toDate(); // Firestore Timestamp
+  } else if (value instanceof Date) {
+    d = value;
+  } else {
+    return String(value);
+  }
+  if (Number.isNaN(d.getTime())) return String(value);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(
     d.getDate()
@@ -24,14 +35,18 @@ const formatUpdatedAt = (iso) => {
 
 function MapView() {
   const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  // markers.json を読み込む
+  // Firestore の members コレクションを購読
   useEffect(() => {
-    fetch("/markers.json")
-      .then((response) => response.json())
-      .then((data) => setMembers(data))
-      .catch((err) => console.error("JSON load error:", err));
+    const unsub = subscribeMembers((list, err) => {
+      if (err) setError(err);
+      setMembers(list);
+      setLoading(false);
+    });
+    return () => unsub();
   }, []);
 
   return (
@@ -67,6 +82,8 @@ function MapView() {
           ))}
         </MapContainer>
         <Legend />
+        {/* 初回起動時：データが無ければシードパネルを表示 */}
+        {!loading && !error && members.length === 0 && <SeedPanel />}
       </main>
     </div>
   );

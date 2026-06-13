@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // allowlist: クライアント側 (src/auth/accessControl.js) と同じ判定を
+    // サーバ側でも持つ defense-in-depth。
+    // 将来 Google Workspace ドメイン縛りに切り替えるときは、
+    // matches() で末尾ドメインを許容する形に書き換える。
+    function isAllowed() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          "k.kakinuma0001@gmail.com"
+        ];
+    }
+
+    match /members/{memberId} {
+      allow read, write: if isAllowed();
+    }
+
+    // 上記以外への一切のアクセスを拒否
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -10,6 +10,7 @@
 | 地図ライブラリ | Leaflet | 1.9.4 | 本体 |
 | タイル | OpenStreetMap | — | `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` |
 | 認証 | Firebase Authentication | firebase 12.x | Google サインイン |
+| 永続化 | Cloud Firestore | firebase 12.x | `members` コレクション、asia-northeast1 |
 | ホスティング | Firebase Hosting | — | `build/` を静的配信 |
 
 ## ディレクトリ構成
@@ -17,8 +18,7 @@
 ```
 map-app/
 ├── public/
-│   ├── index.html, favicon.ico, manifest.json, robots.txt
-│   └── markers.json          ← メンバー配置データ。アプリ起動時に fetch される
+│   └── index.html, favicon.ico, manifest.json, robots.txt
 ├── src/
 │   ├── index.js              ← エントリ。React ルート + Leaflet CSS 読み込み
 │   ├── index.css             ← グローバル CSS（CSS 変数・フォント・基本スタイル）
@@ -30,16 +30,22 @@ map-app/
 │   ├── Legend.css            ← 凡例専用スタイル
 │   ├── markerIcon.js         ← カテゴリ別 L.divIcon 生成
 │   ├── auth/
-│   │   ├── firebase.js       ← Firebase 初期化（apiKey 等の Web 公開設定）
+│   │   ├── firebase.js       ← Firebase 初期化（auth + firestore をエクスポート）
 │   │   ├── accessControl.js  ← allowlist + ドメイン縛り判定
 │   │   ├── AuthProvider.jsx  ← React Context（user / loading / signIn / signOut）
 │   │   ├── LoginPage.jsx/css ← 未認証画面（Google ログインボタン）
 │   │   ├── AccessDenied.jsx/css ← 認証済だが許可リスト外の画面
 │   │   └── AuthLoading.jsx/css ← 認証状態判定中のスピナー
+│   ├── data/
+│   │   ├── firestore.rules   ← (ルートに置く) サーバ側 allowlist
+│   │   ├── membersRepo.js    ← subscribe / upsert / batch seed
+│   │   ├── seedMembers.json  ← 初期データ（架空メンバー 6 名）
+│   │   └── SeedPanel.jsx/css ← Firestore が空のとき出る初回投入 UI
 │   ├── reportWebVitals.js, setupTests.js
 ├── build/                    ← `npm run build` 出力（gitignore）
 ├── .firebase/                ← Firebase デプロイキャッシュ（gitignore）
-├── firebase.json             ← Hosting 設定
+├── firebase.json             ← Hosting + Firestore ルール設定
+├── firestore.rules           ← Firestore セキュリティルール
 ├── .firebaserc               ← デプロイ先プロジェクト固定
 ├── package.json
 └── docs/                     ← 本ドキュメント群

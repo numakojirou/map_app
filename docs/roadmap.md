@@ -43,14 +43,17 @@
 
 ### Phase 3 — 編集と永続化
 
-- [ ] **マーカー編集 UI** — 地図クリック／ドラッグでメンバーを配置
-- [ ] **永続化バックエンド**
-  - 案 A: **Firebase Firestore** — Hosting と同じプロジェクトに同居。リアルタイム同期も得意
-  - 案 B: 小さな静的 API（Cloud Functions など）+ JSON
-- [x] **認証** — Firebase Authentication / Google サインイン（Phase 3-C で実施）
+- [ ] **マーカー編集 UI（3-A）** — 地図クリック／ドラッグでメンバーを配置
+- [x] **永続化バックエンド（3-B）** — Firebase Firestore へ移行
+  - リージョン: `asia-northeast1`（東京）、データベース: `(default)`
+  - コレクション `members` に 1 メンバー = 1 ドキュメント（ID は `m-001` 形式）
+  - `src/data/membersRepo.js` が CRUD + リアルタイム購読を提供
+  - 初期データ投入は `SeedPanel`（Firestore が空のときだけ表示される一回限りの UI）
+  - `firestore.rules` でサーバ側にも allowlist を持つ defense-in-depth
+- [x] **認証（3-C）** — Firebase Authentication / Google サインイン
   - 現状: クライアントサイドの allowlist（`k.kakinuma0001@gmail.com`）で検証中
   - 将来: 会社の Google Workspace ドメインが決まったら `src/auth/accessControl.js`
-    の `ALLOWED_DOMAINS` に追加して切り替え
+    と `firestore.rules` の両方に追加して切り替え
   - 未ログイン → `LoginPage`、ログイン済 allowlist 外 → `AccessDenied`、許可済 → `MapView`
 
 ### Phase 4 — 体験向上
@@ -69,6 +72,11 @@
 
 ## 技術的に検討が要るポイント
 
-- **Firestore を採用すると `markers.json` のフェッチは廃止** → `App.js` のデータ取得層を抽象化しておくと差し替えが楽
-- **react-leaflet 5 + React 19 の相性** — 動作はしているが、StrictMode 二重描画で Leaflet が文句を言うケースが将来出るかもしれない（要観察）
-- **マーカー数が増えた場合のパフォーマンス** — 100 件超なら `react-leaflet-cluster` などのクラスタリング検討
+- **SeedPanel の意図せぬ再投入リスク** — Phase 3-A で編集 UI が入った後、ネットワーク
+  瞬断などで一瞬データが空に見えると、誤って seed ボタンを押されて実データが上書き
+  されうる。Phase 3-A 着手時に「seed は dev 専用」「初回後は表示しない」のような
+  ガードを入れる
+- **react-leaflet 5 + React 19 の相性** — 動作はしているが、StrictMode 二重描画で
+  Leaflet が文句を言うケースが将来出るかもしれない（要観察）
+- **マーカー数が増えた場合のパフォーマンス** — 100 件超なら `react-leaflet-cluster`
+  などのクラスタリング検討

@@ -36,6 +36,8 @@
 
 ## デプロイ手順
 
+### Hosting（アプリ本体）
+
 ```bash
 # 1. 本番ビルド（build/ が更新される）
 npm run build
@@ -45,6 +47,26 @@ firebase deploy --only hosting
 ```
 
 `build/` は `.gitignore` 対象なのでリポジトリには含めない（ローカルで作って投げる）。
+
+### Firestore セキュリティルール
+
+`firestore.rules` を更新したら：
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+Hosting とは独立してデプロイできる。allowlist のメンバー追加など、コード変更
+を伴わない場合はこれだけで反映可能。
+
+### 全部まとめて
+
+```bash
+firebase deploy
+```
+
+`firebase.json` に登録された全ターゲット（Hosting + Firestore rules）が
+デプロイされる。
 
 ## ローカル動作確認
 
