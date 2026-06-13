@@ -36,6 +36,31 @@
   gap: 14px;
 }
 
+.app-header__add {
+  padding: 7px 14px;
+  background: var(--color-office);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 120ms ease, transform 120ms ease, background 120ms ease;
+}
+
+.app-header__add:hover {
+  opacity: 0.92;
+}
+
+.app-header__add:active {
+  transform: translateY(1px);
+}
+
+.app-header__add--active {
+  background: #b45309;
+}
+
 .app-header__count {
   display: inline-flex;
   align-items: center;
@@ -115,5 +140,9 @@
   }
   .app-header__signout {
     padding: 5px 10px;
+  }
+  .app-header__add {
+    padding: 5px 10px;
+    font-size: 12px;
   }
 }

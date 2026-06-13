@@ -18,6 +18,12 @@
   font-family: inherit;
 }
 
+/* 追加モード中はカーソルを十字に */
+.app__map--adding .leaflet-container,
+.app__map--adding .leaflet-container .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
 /* === Marker pin (divIcon) === */
 .marker-pin {
   background: transparent;
@@ -82,6 +88,42 @@
 .popup-card__updated {
   font-size: 11px;
   color: var(--color-text-muted);
-  margin: 0;
+  margin: 0 0 10px;
   font-variant-numeric: tabular-nums;
+}
+
+.popup-card__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+}
+
+.popup-card__action {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease;
+}
+
+.popup-card__action:hover {
+  background: var(--color-border);
+}
+
+.popup-card__action--danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.popup-card__action--danger:hover {
+  background: #fee2e2;
 }

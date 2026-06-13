@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "./auth/AuthProvider";
 import "./Header.css";
 
-function Header({ memberCount, user }) {
+function Header({ memberCount, user, addMode, onToggleAddMode }) {
   const { signOut } = useAuth();
 
   return (
@@ -13,6 +13,18 @@ function Header({ memberCount, user }) {
       </div>
 
       <div className="app-header__right">
+        {onToggleAddMode && (
+          <button
+            type="button"
+            className={`app-header__add ${
+              addMode ? "app-header__add--active" : ""
+            }`}
+            onClick={onToggleAddMode}
+          >
+            {addMode ? "キャンセル" : "+ メンバー追加"}
+          </button>
+        )}
+
         <div className="app-header__count">
           <span className="app-header__count-label">メンバー</span>
           <span className="app-header__count-value">{memberCount}</span>

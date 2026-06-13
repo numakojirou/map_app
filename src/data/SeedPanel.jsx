@@ -13,6 +13,12 @@ function SeedPanel() {
   const [error, setError] = useState(null);
 
   const handleSeed = async () => {
+    const ok = window.confirm(
+      "サンプルデータ（6 名）を Firestore に投入します。\n\n" +
+        "既存に同じ ID のドキュメントがあれば上書きされます。本当に投入しますか？"
+    );
+    if (!ok) return;
+
     setBusy(true);
     setError(null);
     try {

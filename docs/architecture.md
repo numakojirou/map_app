@@ -28,6 +28,7 @@ map-app/
 │   ├── Header.css            ← ヘッダー専用スタイル
 │   ├── Legend.jsx            ← 地図右上の凡例（カテゴリ別色）
 │   ├── Legend.css            ← 凡例専用スタイル
+│   ├── Toast.jsx, .css       ← 短時間表示の通知（編集・削除・ドラッグの結果）
 │   ├── markerIcon.js         ← カテゴリ別 L.divIcon 生成
 │   ├── auth/
 │   │   ├── firebase.js       ← Firebase 初期化（auth + firestore をエクスポート）
@@ -37,10 +38,10 @@ map-app/
 │   │   ├── AccessDenied.jsx/css ← 認証済だが許可リスト外の画面
 │   │   └── AuthLoading.jsx/css ← 認証状態判定中のスピナー
 │   ├── data/
-│   │   ├── firestore.rules   ← (ルートに置く) サーバ側 allowlist
-│   │   ├── membersRepo.js    ← subscribe / upsert / batch seed
+│   │   ├── membersRepo.js    ← subscribe / add / update / delete / batch seed / nextMemberId
 │   │   ├── seedMembers.json  ← 初期データ（架空メンバー 6 名）
-│   │   └── SeedPanel.jsx/css ← Firestore が空のとき出る初回投入 UI
+│   │   ├── SeedPanel.jsx/css ← Firestore が空のとき出る初回投入 UI（confirm ガード）
+│   │   └── MemberForm.jsx/css ← 新規追加 / 編集用モーダルフォーム
 │   ├── reportWebVitals.js, setupTests.js
 ├── build/                    ← `npm run build` 出力（gitignore）
 ├── .firebase/                ← Firebase デプロイキャッシュ（gitignore）
