@@ -47,7 +47,11 @@
 - [ ] **永続化バックエンド**
   - 案 A: **Firebase Firestore** — Hosting と同じプロジェクトに同居。リアルタイム同期も得意
   - 案 B: 小さな静的 API（Cloud Functions など）+ JSON
-- [ ] **認証** — Firebase Authentication（社内ドメイン縛り or 招待制）
+- [x] **認証** — Firebase Authentication / Google サインイン（Phase 3-C で実施）
+  - 現状: クライアントサイドの allowlist（`k.kakinuma0001@gmail.com`）で検証中
+  - 将来: 会社の Google Workspace ドメインが決まったら `src/auth/accessControl.js`
+    の `ALLOWED_DOMAINS` に追加して切り替え
+  - 未ログイン → `LoginPage`、ログイン済 allowlist 外 → `AccessDenied`、許可済 → `MapView`
 
 ### Phase 4 — 体験向上
 

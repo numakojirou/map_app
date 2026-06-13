@@ -9,6 +9,7 @@
 | 地図描画 | react-leaflet | 5.0.0 | React ラッパー |
 | 地図ライブラリ | Leaflet | 1.9.4 | 本体 |
 | タイル | OpenStreetMap | — | `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` |
+| 認証 | Firebase Authentication | firebase 12.x | Google サインイン |
 | ホスティング | Firebase Hosting | — | `build/` を静的配信 |
 
 ## ディレクトリ構成
@@ -21,13 +22,20 @@ map-app/
 ├── src/
 │   ├── index.js              ← エントリ。React ルート + Leaflet CSS 読み込み
 │   ├── index.css             ← グローバル CSS（CSS 変数・フォント・基本スタイル）
-│   ├── App.js                ← レイアウト本体（Header + Map + Legend）
+│   ├── App.js                ← AuthProvider > Gate（Login / Denied / MapView）
 │   ├── App.css               ← アプリレイアウト・マーカーピン・ポップアップカード
-│   ├── Header.jsx            ← トップヘッダー（タイトル + メンバー数）
+│   ├── Header.jsx            ← トップヘッダー（タイトル + メンバー数 + アバター + ログアウト）
 │   ├── Header.css            ← ヘッダー専用スタイル
 │   ├── Legend.jsx            ← 地図右上の凡例（カテゴリ別色）
 │   ├── Legend.css            ← 凡例専用スタイル
 │   ├── markerIcon.js         ← カテゴリ別 L.divIcon 生成
+│   ├── auth/
+│   │   ├── firebase.js       ← Firebase 初期化（apiKey 等の Web 公開設定）
+│   │   ├── accessControl.js  ← allowlist + ドメイン縛り判定
+│   │   ├── AuthProvider.jsx  ← React Context（user / loading / signIn / signOut）
+│   │   ├── LoginPage.jsx/css ← 未認証画面（Google ログインボタン）
+│   │   ├── AccessDenied.jsx/css ← 認証済だが許可リスト外の画面
+│   │   └── AuthLoading.jsx/css ← 認証状態判定中のスピナー
 │   ├── reportWebVitals.js, setupTests.js
 ├── build/                    ← `npm run build` 出力（gitignore）
 ├── .firebase/                ← Firebase デプロイキャッシュ（gitignore）

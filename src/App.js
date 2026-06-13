@@ -3,6 +3,11 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import Header from "./Header";
 import Legend from "./Legend";
+import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import { isAllowedUser } from "./auth/accessControl";
+import LoginPage from "./auth/LoginPage";
+import AccessDenied from "./auth/AccessDenied";
+import AuthLoading from "./auth/AuthLoading";
 import { createMarkerIcon } from "./markerIcon";
 import "./App.css";
 
@@ -17,8 +22,9 @@ const formatUpdatedAt = (iso) => {
   )} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-function App() {
+function MapView() {
   const [members, setMembers] = useState([]);
+  const { user } = useAuth();
 
   // markers.json を読み込む
   useEffect(() => {
@@ -30,7 +36,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header memberCount={members.length} />
+      <Header memberCount={members.length} user={user} />
       <main className="app__map">
         <MapContainer
           center={[35.681236, 139.767125]}
@@ -63,6 +69,23 @@ function App() {
         <Legend />
       </main>
     </div>
+  );
+}
+
+// 認証状態を見て、ログイン画面 / 拒否画面 / 本体 を振り分ける
+function Gate() {
+  const { user, loading } = useAuth();
+  if (loading) return <AuthLoading />;
+  if (!user) return <LoginPage />;
+  if (!isAllowedUser(user)) return <AccessDenied />;
+  return <MapView />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
   );
 }
 
