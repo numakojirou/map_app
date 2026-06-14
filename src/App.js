@@ -351,7 +351,11 @@ function MapView() {
       )}
 
       {adminOpen && userIsAdmin && (
-        <AdminPanel members={members} onClose={handleCloseAdmin} />
+        <AdminPanel
+          members={members}
+          onClose={handleCloseAdmin}
+          onToast={showToast}
+        />
       )}
 
       {toast && (

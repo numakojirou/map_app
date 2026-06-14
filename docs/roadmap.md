@@ -92,8 +92,11 @@
     一致するレコードのみ更新可、かつ email 自体は不変。create / delete は admin のみ
 - [x] **管理者パネル（admin のみ）** — ヘッダー「⚙ 管理」→ モーダル
 - [x] **一覧エクスポート** — CSV / JSON ダウンロード（BOM 付き UTF-8、Excel 対応）
-- [ ] **一括登録（Wave 2）** — CSV / JSON 受付 + プレビュー + writeBatch 投入
-- [ ] **住所サポート（Wave 2）** — Nominatim で住所 → 座標ジオコーディング
+- [x] **一括登録（Wave 2）** — `BulkImport` モーダル。CSV / JSON 自動判定、
+  プレビューテーブル（OK / ジオコーディング待ち / エラー）、writeBatch
+  で 500 件単位の分割投入。新規 ID は `assignNewIds` で既存と被らない連番採番
+- [x] **住所サポート（Wave 2）** — Nominatim で住所 → 座標ジオコーディング
+  （1.1 秒間隔のレート制限、進捗表示）。解決した行は座標確定後に投入可
 
 ### Phase 5 — 運用
 

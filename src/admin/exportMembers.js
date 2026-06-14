@@ -7,6 +7,7 @@ const FIELDS = [
   "site",
   "lat",
   "lng",
+  "address",
   "category",
   "updatedAt",
 ];

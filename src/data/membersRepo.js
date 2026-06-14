@@ -70,6 +70,7 @@ export const deleteMember = async (id) => {
 /**
  * 配列をまとめて投入する。SeedPanel から呼ばれる。
  * 既存ドキュメントは上書き（merge: true）。
+ * seed データの updatedAt は ISO 文字列のまま尊重する。
  */
 export const seedMembers = async (members) => {
   const batch = writeBatch(db);
@@ -78,6 +79,29 @@ export const seedMembers = async (members) => {
     batch.set(doc(db, COLLECTION, id), rest, { merge: true });
   }
   await batch.commit();
+};
+
+/**
+ * 一括投入。BulkImport から呼ばれる。
+ * - merge: true で既存 ID は上書き
+ * - updatedAt は常に serverTimestamp で塗り直す
+ * - Firestore の writeBatch 上限 500 を超える場合は分割
+ */
+export const bulkUpsertMembers = async (members) => {
+  const CHUNK = 500;
+  for (let i = 0; i < members.length; i += CHUNK) {
+    const slice = members.slice(i, i + CHUNK);
+    const batch = writeBatch(db);
+    for (const m of slice) {
+      const { id, ...rest } = m;
+      batch.set(
+        doc(db, COLLECTION, id),
+        { ...rest, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+  }
 };
 
 /**
