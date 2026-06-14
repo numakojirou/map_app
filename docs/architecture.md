@@ -26,10 +26,12 @@ map-app/
 │   ├── App.css               ← アプリレイアウト・マーカーピン・ポップアップカード
 │   ├── Header.jsx            ← トップヘッダー（タイトル + メンバー数 + アバター + ログアウト）
 │   ├── Header.css            ← ヘッダー専用スタイル
-│   ├── Legend.jsx            ← 地図右上の凡例（カテゴリ別色）
-│   ├── Legend.css            ← 凡例専用スタイル
+│   ├── Legend.jsx, .css      ← 地図右上の凡例（カテゴリ別色）
+│   ├── MemberList.jsx, .css  ← 左サイドバー（検索 + フィルタ + 一覧）
 │   ├── Toast.jsx, .css       ← 短時間表示の通知（編集・削除・ドラッグの結果）
 │   ├── markerIcon.js         ← カテゴリ別 L.divIcon 生成
+│   ├── categoryColors.js     ← カテゴリ ⇔ 色の共通定義（pin/凡例/リストで共有）
+│   ├── formatTime.js         ← updatedAt 整形（絶対・相対の両方）
 │   ├── auth/
 │   │   ├── firebase.js       ← Firebase 初期化（auth + firestore をエクスポート）
 │   │   ├── accessControl.js  ← allowlist + ドメイン縛り判定

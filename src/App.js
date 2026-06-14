@@ -10,6 +10,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import Header from "./Header";
 import Legend from "./Legend";
+import MemberList from "./MemberList";
 import Toast from "./Toast";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { isAllowedUser } from "./auth/accessControl";
@@ -26,27 +27,8 @@ import {
   updateMember,
 } from "./data/membersRepo";
 import { createMarkerIcon } from "./markerIcon";
+import { formatAbsolute } from "./formatTime";
 import "./App.css";
-
-// 表示用：ISO 文字列 / Firestore Timestamp / Date を「YYYY/MM/DD HH:mm」に整形
-const formatUpdatedAt = (value) => {
-  if (!value) return "";
-  let d;
-  if (typeof value === "string") {
-    d = new Date(value);
-  } else if (typeof value?.toDate === "function") {
-    d = value.toDate(); // Firestore Timestamp
-  } else if (value instanceof Date) {
-    d = value;
-  } else {
-    return String(value);
-  }
-  if (Number.isNaN(d.getTime())) return String(value);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(
-    d.getDate()
-  )} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
 
 // 地図クリックを拾うための子コンポーネント。
 // addMode が true のときだけクリック位置を親に渡す。
@@ -79,19 +61,39 @@ function FitBoundsOnLoad({ members }) {
   return null;
 }
 
+// サイドバーからメンバーが選択されたら、対応するマーカーへ flyTo して
+// popup を開く。selection が更新された瞬間に発火する。
+function SelectionHandler({ selection, members, markerRefs }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!selection) return;
+    const member = members.find((m) => m.id === selection.id);
+    if (!member) return;
+    map.flyTo([member.lat, member.lng], Math.max(map.getZoom(), 13), {
+      duration: 0.6,
+    });
+    const marker = markerRefs.current[selection.id];
+    if (marker) {
+      // 短い遅延で popup を開く（flyTo の開始後でも popup は表示される）
+      setTimeout(() => marker.openPopup(), 50);
+    }
+  }, [selection, members, map, markerRefs]);
+  return null;
+}
+
 function MapView() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addMode, setAddMode] = useState(false);
-  // formState: null | { mode: "create" | "edit", initial: {...} }
   const [formState, setFormState] = useState(null);
-  // toast: null | { key, message }
   const [toast, setToast] = useState(null);
+  // selection: null | { id, key }   ← key で同一 id を再クリックしても useEffect が発火
+  const [selection, setSelection] = useState(null);
 
+  const markerRefs = useRef({});
   const { user } = useAuth();
 
-  // Firestore の members コレクションを購読
   useEffect(() => {
     const unsub = subscribeMembers((list, err) => {
       if (err) setError(err);
@@ -126,7 +128,7 @@ function MapView() {
           lng: latlng.lng,
         },
       });
-      setAddMode(false); // 配置位置が決まったら追加モードを抜ける
+      setAddMode(false);
     },
     [addMode, members]
   );
@@ -185,6 +187,11 @@ function MapView() {
     [showToast]
   );
 
+  // サイドバーで選択された
+  const handleSelectFromList = useCallback((id) => {
+    setSelection({ id, key: Date.now() });
+  }, []);
+
   const mapClassName = `app__map ${addMode ? "app__map--adding" : ""}`;
 
   return (
@@ -195,73 +202,89 @@ function MapView() {
         addMode={addMode}
         onToggleAddMode={toggleAddMode}
       />
-      <main className={mapClassName}>
-        <MapContainer
-          center={[35.681236, 139.767125]}
-          zoom={10}
-          scrollWheelZoom
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      <div className="app__body">
+        <aside className="app__sidebar">
+          <MemberList
+            members={members}
+            selectedId={selection?.id ?? null}
+            onSelect={handleSelectFromList}
           />
+        </aside>
+        <main className={mapClassName}>
+          <MapContainer
+            center={[35.681236, 139.767125]}
+            zoom={10}
+            scrollWheelZoom
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          <ClickHandler enabled={addMode} onPick={handleMapClick} />
-          <FitBoundsOnLoad members={members} />
+            <ClickHandler enabled={addMode} onPick={handleMapClick} />
+            <FitBoundsOnLoad members={members} />
+            <SelectionHandler
+              selection={selection}
+              members={members}
+              markerRefs={markerRefs}
+            />
 
-          {members.map((member) => (
-            <Marker
-              key={member.id}
-              position={[member.lat, member.lng]}
-              icon={createMarkerIcon(member.category)}
-              draggable
-              eventHandlers={{
-                dragend: (e) => {
-                  const newPos = e.target.getLatLng();
-                  const ok = window.confirm(
-                    `${member.name} の位置を本当に移動しますか？`
-                  );
-                  if (!ok) {
-                    // 取り消し: Leaflet 側のマーカー位置を元に戻す
-                    e.target.setLatLng([member.lat, member.lng]);
-                    return;
-                  }
-                  handleDragEnd(member, newPos);
-                },
-              }}
-            >
-              <Popup>
-                <div className="popup-card">
-                  <h3 className="popup-card__name">{member.name}</h3>
-                  <p className="popup-card__site">{member.site}</p>
-                  <p className="popup-card__updated">
-                    最終更新: {formatUpdatedAt(member.updatedAt)}
-                  </p>
-                  <div className="popup-card__actions">
-                    <button
-                      type="button"
-                      className="popup-card__action"
-                      onClick={() => handleEdit(member)}
-                    >
-                      編集
-                    </button>
-                    <button
-                      type="button"
-                      className="popup-card__action popup-card__action--danger"
-                      onClick={() => handleDelete(member)}
-                    >
-                      削除
-                    </button>
+            {members.map((member) => (
+              <Marker
+                key={member.id}
+                position={[member.lat, member.lng]}
+                icon={createMarkerIcon(member.category)}
+                draggable
+                ref={(ref) => {
+                  if (ref) markerRefs.current[member.id] = ref;
+                  else delete markerRefs.current[member.id];
+                }}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const newPos = e.target.getLatLng();
+                    const ok = window.confirm(
+                      `${member.name} の位置を本当に移動しますか？`
+                    );
+                    if (!ok) {
+                      e.target.setLatLng([member.lat, member.lng]);
+                      return;
+                    }
+                    handleDragEnd(member, newPos);
+                  },
+                }}
+              >
+                <Popup>
+                  <div className="popup-card">
+                    <h3 className="popup-card__name">{member.name}</h3>
+                    <p className="popup-card__site">{member.site}</p>
+                    <p className="popup-card__updated">
+                      最終更新: {formatAbsolute(member.updatedAt)}
+                    </p>
+                    <div className="popup-card__actions">
+                      <button
+                        type="button"
+                        className="popup-card__action"
+                        onClick={() => handleEdit(member)}
+                      >
+                        編集
+                      </button>
+                      <button
+                        type="button"
+                        className="popup-card__action popup-card__action--danger"
+                        onClick={() => handleDelete(member)}
+                      >
+                        削除
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-        <Legend />
-        {/* 初回起動時：データが無ければシードパネルを表示 */}
-        {!loading && !error && members.length === 0 && <SeedPanel />}
-      </main>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+          <Legend />
+          {!loading && !error && members.length === 0 && <SeedPanel />}
+        </main>
+      </div>
 
       {formState && (
         <MemberForm
@@ -283,7 +306,6 @@ function MapView() {
   );
 }
 
-// 認証状態を見て、ログイン画面 / 拒否画面 / 本体 を振り分ける
 function Gate() {
   const { user, loading } = useAuth();
   if (loading) return <AuthLoading />;
