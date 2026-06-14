@@ -27,9 +27,46 @@
   min-height: 0;
 }
 
-@media (max-width: 640px) {
+.app__backdrop {
+  display: none;
+}
+
+/* ========== モバイル（768px 以下）: サイドバーを drawer 化 ========== */
+@media (max-width: 768px) {
   .app__sidebar {
-    display: none; /* モバイル対応は 4-3 で drawer 化 */
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 84vw;
+    max-width: 320px;
+    z-index: 1500;
+    border-right: none;
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+  }
+
+  .app__sidebar--open {
+    transform: translateX(0);
+  }
+
+  .app__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 1400;
+    animation: app-backdrop-in 180ms ease-out;
+  }
+}
+
+@keyframes app-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

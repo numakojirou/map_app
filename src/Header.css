@@ -9,12 +9,40 @@
   position: relative;
   z-index: 1000;
   flex-shrink: 0;
+  gap: 10px;
+}
+
+.app-header__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.app-header__hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.app-header__hamburger:hover {
+  background: var(--color-bg);
 }
 
 .app-header__brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .app-header__logo {
@@ -28,15 +56,22 @@
   margin: 0;
   letter-spacing: 0.02em;
   color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-header__right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .app-header__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 7px 14px;
   background: var(--color-office);
   color: #ffffff;
@@ -59,6 +94,11 @@
 
 .app-header__add--active {
   background: #b45309;
+}
+
+.app-header__add-icon {
+  font-size: 15px;
+  line-height: 1;
 }
 
 .app-header__count {
@@ -119,30 +159,82 @@
   cursor: pointer;
   font-family: inherit;
   transition: background 120ms ease;
+  white-space: nowrap;
 }
 
 .app-header__signout:hover {
   background: var(--color-bg);
 }
 
-@media (max-width: 480px) {
+/* ========== モバイル（768px 以下） ========== */
+@media (max-width: 768px) {
   .app-header {
-    padding: 10px 16px;
+    padding: 10px 14px;
+    gap: 6px;
   }
+
+  .app-header__hamburger {
+    display: inline-flex;
+  }
+
   .app-header__title {
     font-size: 15px;
   }
+
   .app-header__right {
     gap: 8px;
   }
+
+  /* 「+ メンバー追加」をアイコンのみに */
+  .app-header__add {
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+  }
+
+  .app-header__add-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .app-header__add-label {
+    display: none;
+  }
+
+  /* アバターは隠してログアウトだけ残す */
+  .app-header__avatar {
+    display: none;
+  }
+
+  .app-header__user {
+    gap: 0;
+  }
+
+  .app-header__signout {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
   .app-header__count {
     padding: 4px 10px;
   }
-  .app-header__signout {
-    padding: 5px 10px;
+
+  .app-header__count-label {
+    font-size: 11px;
   }
-  .app-header__add {
-    padding: 5px 10px;
-    font-size: 12px;
+
+  .app-header__count-value {
+    font-size: 13px;
+  }
+}
+
+/* ごく狭い幅（〜380px）でメンバーバッジが詰まりすぎたら省略 */
+@media (max-width: 380px) {
+  .app-header__count-label {
+    display: none;
+  }
+  .app-header__count {
+    padding: 4px 8px;
   }
 }

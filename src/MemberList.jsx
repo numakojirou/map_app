@@ -3,7 +3,7 @@ import { CATEGORIES, getCategoryColor } from "./categoryColors";
 import { formatRelative } from "./formatTime";
 import "./MemberList.css";
 
-function MemberList({ members, selectedId, onSelect }) {
+function MemberList({ members, selectedId, onSelect, onClose }) {
   const [searchText, setSearchText] = useState("");
   const [selectedCategories, setSelectedCategories] = useState(() => new Set());
 
@@ -40,6 +40,16 @@ function MemberList({ members, selectedId, onSelect }) {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
+        {onClose && (
+          <button
+            type="button"
+            className="member-list__close"
+            onClick={onClose}
+            aria-label="閉じる"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       <div className="member-list__filters" role="group" aria-label="カテゴリで絞り込み">

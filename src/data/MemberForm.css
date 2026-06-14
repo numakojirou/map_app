@@ -156,3 +156,12 @@
 .member-form__button--primary:hover:not(:disabled) {
   opacity: 0.92;
 }
+
+@media (max-width: 480px) {
+  .member-form__overlay {
+    padding: 12px;
+  }
+  .member-form__card {
+    padding: 20px 18px 18px;
+  }
+}

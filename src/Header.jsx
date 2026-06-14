@@ -2,14 +2,32 @@ import React from "react";
 import { useAuth } from "./auth/AuthProvider";
 import "./Header.css";
 
-function Header({ memberCount, user, addMode, onToggleAddMode }) {
+function Header({
+  memberCount,
+  user,
+  addMode,
+  onToggleAddMode,
+  onToggleSidebar,
+}) {
   const { signOut } = useAuth();
 
   return (
     <header className="app-header">
-      <div className="app-header__brand">
-        <span className="app-header__logo" aria-hidden>📍</span>
-        <h1 className="app-header__title">社員マップ</h1>
+      <div className="app-header__left">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            className="app-header__hamburger"
+            onClick={onToggleSidebar}
+            aria-label="メニュー"
+          >
+            ☰
+          </button>
+        )}
+        <div className="app-header__brand">
+          <span className="app-header__logo" aria-hidden>📍</span>
+          <h1 className="app-header__title">社員マップ</h1>
+        </div>
       </div>
 
       <div className="app-header__right">
@@ -20,8 +38,14 @@ function Header({ memberCount, user, addMode, onToggleAddMode }) {
               addMode ? "app-header__add--active" : ""
             }`}
             onClick={onToggleAddMode}
+            aria-label={addMode ? "キャンセル" : "メンバー追加"}
           >
-            {addMode ? "キャンセル" : "+ メンバー追加"}
+            <span className="app-header__add-icon">
+              {addMode ? "×" : "+"}
+            </span>
+            <span className="app-header__add-label">
+              {addMode ? "キャンセル" : "メンバー追加"}
+            </span>
           </button>
         )}
 

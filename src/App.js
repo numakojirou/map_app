@@ -90,6 +90,8 @@ function MapView() {
   const [toast, setToast] = useState(null);
   // selection: null | { id, key }   ← key で同一 id を再クリックしても useEffect が発火
   const [selection, setSelection] = useState(null);
+  // モバイル時のサイドバー drawer 開閉。PC では常時表示なので状態は無視される。
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const markerRefs = useRef({});
   const { user } = useAuth();
@@ -187,9 +189,18 @@ function MapView() {
     [showToast]
   );
 
-  // サイドバーで選択された
+  // サイドバーで選択された。同時にモバイル drawer は閉じる（PC では無影響）。
   const handleSelectFromList = useCallback((id) => {
     setSelection({ id, key: Date.now() });
+    setSidebarOpen(false);
+  }, []);
+
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev);
+  }, []);
+
+  const handleCloseSidebar = useCallback(() => {
+    setSidebarOpen(false);
   }, []);
 
   const mapClassName = `app__map ${addMode ? "app__map--adding" : ""}`;
@@ -201,15 +212,28 @@ function MapView() {
         user={user}
         addMode={addMode}
         onToggleAddMode={toggleAddMode}
+        onToggleSidebar={handleToggleSidebar}
       />
       <div className="app__body">
-        <aside className="app__sidebar">
+        <aside
+          className={`app__sidebar ${
+            sidebarOpen ? "app__sidebar--open" : ""
+          }`}
+        >
           <MemberList
             members={members}
             selectedId={selection?.id ?? null}
             onSelect={handleSelectFromList}
+            onClose={handleCloseSidebar}
           />
         </aside>
+        {sidebarOpen && (
+          <div
+            className="app__backdrop"
+            onClick={handleCloseSidebar}
+            aria-hidden
+          />
+        )}
         <main className={mapClassName}>
           <MapContainer
             center={[35.681236, 139.767125]}
