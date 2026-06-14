@@ -8,18 +8,19 @@ const CATEGORIES = ["出社", "ハイブリッド", "在宅"];
  *
  * props:
  *   mode: "create" | "edit"
- *   initial: { id, name, site, lat, lng, category }
+ *   initial: { id, name, email, site, lat, lng, category }
+ *   canEditEmail: boolean   ← admin のみ true。non-admin は read-only 表示
  *   onSave(member): async
  *   onCancel(): void
  */
-function MemberForm({ mode, initial, onSave, onCancel }) {
+function MemberForm({ mode, initial, canEditEmail = false, onSave, onCancel }) {
   const [name, setName] = useState(initial.name ?? "");
   const [site, setSite] = useState(initial.site ?? "");
   const [category, setCategory] = useState(initial.category ?? "出社");
+  const [email, setEmail] = useState(initial.email ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  // ESC で閉じる
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape" && !busy) onCancel();
@@ -34,6 +35,7 @@ function MemberForm({ mode, initial, onSave, onCancel }) {
 
     const trimmedName = name.trim();
     const trimmedSite = site.trim();
+    const trimmedEmail = email.trim();
     if (!trimmedName || !trimmedSite) {
       setError("名前と現場の入力は必須です。");
       return;
@@ -49,6 +51,7 @@ function MemberForm({ mode, initial, onSave, onCancel }) {
         lat: initial.lat,
         lng: initial.lng,
         category,
+        email: trimmedEmail,
       });
     } catch (err) {
       console.error(err);
@@ -118,6 +121,24 @@ function MemberForm({ mode, initial, onSave, onCancel }) {
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
+        </div>
+
+        <div className="member-form__field">
+          <label htmlFor="mf-email">
+            メールアドレス
+            {!canEditEmail && (
+              <span className="member-form__hint">（管理者のみ変更可）</span>
+            )}
+          </label>
+          <input
+            id="mf-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="user@example.com（このメンバーの所有者となります）"
+            disabled={busy || !canEditEmail}
+            readOnly={!canEditEmail}
+          />
         </div>
 
         <p className="member-form__coords">

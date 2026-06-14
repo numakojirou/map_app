@@ -5,11 +5,17 @@ import "./Header.css";
 function Header({
   memberCount,
   user,
+  isAdmin = false,
   addMode,
   onToggleAddMode,
   onToggleSidebar,
+  onOpenAdmin,
 }) {
   const { signOut } = useAuth();
+
+  // 「+ メンバー追加」と「⚙ 管理」は admin のみ
+  const showAddButton = isAdmin && onToggleAddMode;
+  const showAdminButton = isAdmin && onOpenAdmin;
 
   return (
     <header className="app-header">
@@ -31,7 +37,19 @@ function Header({
       </div>
 
       <div className="app-header__right">
-        {onToggleAddMode && (
+        {showAdminButton && (
+          <button
+            type="button"
+            className="app-header__admin"
+            onClick={onOpenAdmin}
+            aria-label="管理者パネル"
+          >
+            <span className="app-header__admin-icon" aria-hidden>⚙</span>
+            <span className="app-header__admin-label">管理</span>
+          </button>
+        )}
+
+        {showAddButton && (
           <button
             type="button"
             className={`app-header__add ${

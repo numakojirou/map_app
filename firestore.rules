@@ -1,22 +1,62 @@
 rules_version = '2';
 
+// クライアント側 (src/auth/accessControl.js) と必ず同じ判定を持たせること。
+// 片方だけ変えると挙動がずれる。
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // allowlist: クライアント側 (src/auth/accessControl.js) と同じ判定を
-    // サーバ側でも持つ defense-in-depth。
-    // 将来 Google Workspace ドメイン縛りに切り替えるときは、
-    // matches() で末尾ドメインを許容する形に書き換える。
-    function isAllowed() {
+    function isAuthenticated() {
       return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in [
+        && request.auth.token.email_verified == true;
+    }
+
+    function userEmail() {
+      return request.auth.token.email;
+    }
+
+    // allowlist: アプリを使ってよいユーザー
+    function isAllowed() {
+      return isAuthenticated()
+        && userEmail() in [
           "k.kakinuma0001@gmail.com"
         ];
     }
 
+    // 管理者: 全員のレコード編集 + 一括登録 + 一覧出力ができる
+    function isAdmin() {
+      return isAuthenticated()
+        && userEmail() in [
+          "k.kakinuma0001@gmail.com"
+        ];
+    }
+
+    // 所有者: 対象ドキュメントの email フィールドが自分のメアドと一致
+    function isOwner(memberData) {
+      return memberData.get("email", null) == userEmail();
+    }
+
     match /members/{memberId} {
-      allow read, write: if isAllowed();
+      // 認証 + allowlist で全件読める
+      allow read: if isAllowed();
+
+      // 作成は admin のみ（個人ユーザーが自分を勝手に作るのは禁止）
+      allow create: if isAllowed() && isAdmin();
+
+      // 更新は admin（何でも可）または 所有者（email は変更不可）
+      // 所有者が email を書き換えてレコードを他人に「譲渡」できないように、
+      // 非 admin の場合は email の不変条件を課す。
+      allow update: if isAllowed()
+        && (
+          isAdmin()
+          || (
+            isOwner(resource.data)
+            && request.resource.data.email == resource.data.email
+          )
+        );
+
+      // 削除は admin のみ
+      allow delete: if isAllowed() && isAdmin();
     }
 
     // 上記以外への一切のアクセスを拒否

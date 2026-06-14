@@ -13,12 +13,13 @@ import Legend from "./Legend";
 import MemberList from "./MemberList";
 import Toast from "./Toast";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
-import { isAllowedUser } from "./auth/accessControl";
+import { canEditMember, isAdmin, isAllowedUser } from "./auth/accessControl";
 import LoginPage from "./auth/LoginPage";
 import AccessDenied from "./auth/AccessDenied";
 import AuthLoading from "./auth/AuthLoading";
 import SeedPanel from "./data/SeedPanel";
 import MemberForm from "./data/MemberForm";
+import AdminPanel from "./admin/AdminPanel";
 import {
   addMember,
   deleteMember,
@@ -30,8 +31,6 @@ import { createMarkerIcon } from "./markerIcon";
 import { formatAbsolute } from "./formatTime";
 import "./App.css";
 
-// 地図クリックを拾うための子コンポーネント。
-// addMode が true のときだけクリック位置を親に渡す。
 function ClickHandler({ enabled, onPick }) {
   useMapEvents({
     click: (e) => {
@@ -41,8 +40,6 @@ function ClickHandler({ enabled, onPick }) {
   return null;
 }
 
-// 起動直後に一度だけ、全マーカーが収まる zoom / 中心に合わせる。
-// その後ユーザーがパン/ズームしても再フィットしない（操作の邪魔をしない）。
 function FitBoundsOnLoad({ members }) {
   const map = useMap();
   const fittedRef = useRef(false);
@@ -61,8 +58,6 @@ function FitBoundsOnLoad({ members }) {
   return null;
 }
 
-// サイドバーからメンバーが選択されたら、対応するマーカーへ flyTo して
-// popup を開く。selection が更新された瞬間に発火する。
 function SelectionHandler({ selection, members, markerRefs }) {
   const map = useMap();
   useEffect(() => {
@@ -74,7 +69,6 @@ function SelectionHandler({ selection, members, markerRefs }) {
     });
     const marker = markerRefs.current[selection.id];
     if (marker) {
-      // 短い遅延で popup を開く（flyTo の開始後でも popup は表示される）
       setTimeout(() => marker.openPopup(), 50);
     }
   }, [selection, members, map, markerRefs]);
@@ -88,13 +82,13 @@ function MapView() {
   const [addMode, setAddMode] = useState(false);
   const [formState, setFormState] = useState(null);
   const [toast, setToast] = useState(null);
-  // selection: null | { id, key }   ← key で同一 id を再クリックしても useEffect が発火
   const [selection, setSelection] = useState(null);
-  // モバイル時のサイドバー drawer 開閉。PC では常時表示なので状態は無視される。
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const markerRefs = useRef({});
   const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
 
   useEffect(() => {
     const unsub = subscribeMembers((list, err) => {
@@ -126,6 +120,7 @@ function MapView() {
           name: "",
           site: "",
           category: "出社",
+          email: "",
           lat: latlng.lat,
           lng: latlng.lng,
         },
@@ -136,7 +131,7 @@ function MapView() {
   );
 
   const handleEdit = useCallback((member) => {
-    setFormState({ mode: "edit", initial: { ...member } });
+    setFormState({ mode: "edit", initial: { email: "", ...member } });
   }, []);
 
   const handleDelete = useCallback(
@@ -148,7 +143,11 @@ function MapView() {
         showToast(`${member.name} を削除しました`);
       } catch (e) {
         console.error(e);
-        showToast("削除に失敗しました");
+        showToast(
+          e?.code === "permission-denied"
+            ? "権限がありません（管理者のみ削除できます）"
+            : "削除に失敗しました"
+        );
       }
     },
     [showToast]
@@ -156,20 +155,36 @@ function MapView() {
 
   const handleSave = useCallback(
     async (member) => {
-      if (formState?.mode === "create") {
-        await addMember(member);
-        showToast(`${member.name} を追加しました`);
-      } else {
-        await updateMember(member.id, {
-          name: member.name,
-          site: member.site,
-          category: member.category,
-        });
-        showToast(`${member.name} を更新しました`);
+      try {
+        if (formState?.mode === "create") {
+          // create は admin のみ。email は admin が指定した値（空文字でも可）
+          await addMember({ ...member, email: member.email || "" });
+          showToast(`${member.name} を追加しました`);
+        } else {
+          // update は admin なら全フィールド、非 admin の所有者なら email を
+          // 変えない（rules でも禁止）。クライアント側でも送信内容を制御。
+          const updates = {
+            name: member.name,
+            site: member.site,
+            category: member.category,
+          };
+          if (userIsAdmin) {
+            updates.email = member.email || "";
+          }
+          await updateMember(member.id, updates);
+          showToast(`${member.name} を更新しました`);
+        }
+        setFormState(null);
+      } catch (e) {
+        console.error(e);
+        throw new Error(
+          e?.code === "permission-denied"
+            ? "権限がありません"
+            : e.message ?? "保存に失敗しました"
+        );
       }
-      setFormState(null);
     },
-    [formState, showToast]
+    [formState, userIsAdmin, showToast]
   );
 
   const handleCancelForm = useCallback(() => {
@@ -183,13 +198,16 @@ function MapView() {
         showToast(`${member.name} の位置を更新しました`);
       } catch (e) {
         console.error(e);
-        showToast("位置の更新に失敗しました");
+        showToast(
+          e?.code === "permission-denied"
+            ? "権限がありません（自分のレコードのみ移動可）"
+            : "位置の更新に失敗しました"
+        );
       }
     },
     [showToast]
   );
 
-  // サイドバーで選択された。同時にモバイル drawer は閉じる（PC では無影響）。
   const handleSelectFromList = useCallback((id) => {
     setSelection({ id, key: Date.now() });
     setSidebarOpen(false);
@@ -203,6 +221,9 @@ function MapView() {
     setSidebarOpen(false);
   }, []);
 
+  const handleOpenAdmin = useCallback(() => setAdminOpen(true), []);
+  const handleCloseAdmin = useCallback(() => setAdminOpen(false), []);
+
   const mapClassName = `app__map ${addMode ? "app__map--adding" : ""}`;
 
   return (
@@ -210,9 +231,11 @@ function MapView() {
       <Header
         memberCount={members.length}
         user={user}
+        isAdmin={userIsAdmin}
         addMode={addMode}
         onToggleAddMode={toggleAddMode}
         onToggleSidebar={handleToggleSidebar}
+        onOpenAdmin={handleOpenAdmin}
       />
       <div className="app__body">
         <aside
@@ -253,57 +276,64 @@ function MapView() {
               markerRefs={markerRefs}
             />
 
-            {members.map((member) => (
-              <Marker
-                key={member.id}
-                position={[member.lat, member.lng]}
-                icon={createMarkerIcon(member.category)}
-                draggable
-                ref={(ref) => {
-                  if (ref) markerRefs.current[member.id] = ref;
-                  else delete markerRefs.current[member.id];
-                }}
-                eventHandlers={{
-                  dragend: (e) => {
-                    const newPos = e.target.getLatLng();
-                    const ok = window.confirm(
-                      `${member.name} の位置を本当に移動しますか？`
-                    );
-                    if (!ok) {
-                      e.target.setLatLng([member.lat, member.lng]);
-                      return;
-                    }
-                    handleDragEnd(member, newPos);
-                  },
-                }}
-              >
-                <Popup>
-                  <div className="popup-card">
-                    <h3 className="popup-card__name">{member.name}</h3>
-                    <p className="popup-card__site">{member.site}</p>
-                    <p className="popup-card__updated">
-                      最終更新: {formatAbsolute(member.updatedAt)}
-                    </p>
-                    <div className="popup-card__actions">
-                      <button
-                        type="button"
-                        className="popup-card__action"
-                        onClick={() => handleEdit(member)}
-                      >
-                        編集
-                      </button>
-                      <button
-                        type="button"
-                        className="popup-card__action popup-card__action--danger"
-                        onClick={() => handleDelete(member)}
-                      >
-                        削除
-                      </button>
+            {members.map((member) => {
+              const editable = canEditMember(user, member);
+              return (
+                <Marker
+                  key={member.id}
+                  position={[member.lat, member.lng]}
+                  icon={createMarkerIcon(member.category)}
+                  draggable={editable}
+                  ref={(ref) => {
+                    if (ref) markerRefs.current[member.id] = ref;
+                    else delete markerRefs.current[member.id];
+                  }}
+                  eventHandlers={{
+                    dragend: (e) => {
+                      const newPos = e.target.getLatLng();
+                      const ok = window.confirm(
+                        `${member.name} の位置を本当に移動しますか？`
+                      );
+                      if (!ok) {
+                        e.target.setLatLng([member.lat, member.lng]);
+                        return;
+                      }
+                      handleDragEnd(member, newPos);
+                    },
+                  }}
+                >
+                  <Popup>
+                    <div className="popup-card">
+                      <h3 className="popup-card__name">{member.name}</h3>
+                      <p className="popup-card__site">{member.site}</p>
+                      <p className="popup-card__updated">
+                        最終更新: {formatAbsolute(member.updatedAt)}
+                      </p>
+                      {editable && (
+                        <div className="popup-card__actions">
+                          <button
+                            type="button"
+                            className="popup-card__action"
+                            onClick={() => handleEdit(member)}
+                          >
+                            編集
+                          </button>
+                          {userIsAdmin && (
+                            <button
+                              type="button"
+                              className="popup-card__action popup-card__action--danger"
+                              onClick={() => handleDelete(member)}
+                            >
+                              削除
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
           <Legend />
           {!loading && !error && members.length === 0 && <SeedPanel />}
@@ -314,9 +344,14 @@ function MapView() {
         <MemberForm
           mode={formState.mode}
           initial={formState.initial}
+          canEditEmail={userIsAdmin}
           onSave={handleSave}
           onCancel={handleCancelForm}
         />
+      )}
+
+      {adminOpen && userIsAdmin && (
+        <AdminPanel members={members} onClose={handleCloseAdmin} />
       )}
 
       {toast && (

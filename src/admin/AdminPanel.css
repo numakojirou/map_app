@@ -1,0 +1,126 @@
+.admin-panel__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.admin-panel__card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 24px 26px 20px;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-panel__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.admin-panel__close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.admin-panel__close:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.admin-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-panel__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.admin-panel__lead {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.admin-panel__lead--muted {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.admin-panel__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.admin-panel__button {
+  padding: 9px 16px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.admin-panel__button:hover:not(:disabled) {
+  background: var(--color-bg);
+}
+
+.admin-panel__button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.admin-panel__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-panel__button--disabled {
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .admin-panel__overlay {
+    padding: 12px;
+  }
+  .admin-panel__card {
+    padding: 20px 18px 16px;
+  }
+}

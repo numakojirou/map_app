@@ -80,6 +80,21 @@
   収まる範囲に `fitBounds`。padding 40px、maxZoom 14。ユーザーがその後操作した
   ら追従しない
 
+### Phase 4.5 — 権限分離 + 管理機能
+
+- [x] **ロール分離（admin / member）** — `accessControl.js` の `ALLOWED_ADMINS`
+  でハードコード。`isAdmin(user)` / `canEditMember(user, member)` ヘルパー
+- [x] **member スキーマに `email` フィールドを追加（optional）** — 所有者識別
+- [x] **編集権限ガード（クライアント + サーバ両側）**
+  - クライアント: popup の「編集」「削除」、ドラッグ、「+ メンバー追加」、
+    「⚙ 管理」ボタンを権限に応じて出し分け
+  - サーバ: `firestore.rules` を所有者ベースに刷新。member は自分の email と
+    一致するレコードのみ更新可、かつ email 自体は不変。create / delete は admin のみ
+- [x] **管理者パネル（admin のみ）** — ヘッダー「⚙ 管理」→ モーダル
+- [x] **一覧エクスポート** — CSV / JSON ダウンロード（BOM 付き UTF-8、Excel 対応）
+- [ ] **一括登録（Wave 2）** — CSV / JSON 受付 + プレビュー + writeBatch 投入
+- [ ] **住所サポート（Wave 2）** — Nominatim で住所 → 座標ジオコーディング
+
 ### Phase 5 — 運用
 
 - [ ] **CI/CD** — GitHub Actions で `main` push → Firebase Hosting 自動デプロイ
