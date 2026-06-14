@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
   Marker,
   Popup,
+  useMap,
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -55,6 +56,26 @@ function ClickHandler({ enabled, onPick }) {
       if (enabled) onPick(e.latlng);
     },
   });
+  return null;
+}
+
+// 起動直後に一度だけ、全マーカーが収まる zoom / 中心に合わせる。
+// その後ユーザーがパン/ズームしても再フィットしない（操作の邪魔をしない）。
+function FitBoundsOnLoad({ members }) {
+  const map = useMap();
+  const fittedRef = useRef(false);
+  useEffect(() => {
+    if (fittedRef.current) return;
+    if (members.length === 0) return;
+    const lats = members.map((m) => m.lat);
+    const lngs = members.map((m) => m.lng);
+    const bounds = [
+      [Math.min(...lats), Math.min(...lngs)],
+      [Math.max(...lats), Math.max(...lngs)],
+    ];
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+    fittedRef.current = true;
+  }, [members, map]);
   return null;
 }
 
@@ -186,6 +207,7 @@ function MapView() {
           />
 
           <ClickHandler enabled={addMode} onPick={handleMapClick} />
+          <FitBoundsOnLoad members={members} />
 
           {members.map((member) => (
             <Marker
